@@ -8,6 +8,8 @@ setup () {
   touch ".zshrc"
   touch ".profile"
   touch "test_profile"
+  mkdir "zdots"
+  touch "zdots/.zshrc"
 }
 
 cleanup () {
@@ -15,8 +17,10 @@ cleanup () {
   unset NVM_ENV
   unset NVM_DETECT_PROFILE
   unset SHELL
+  unset ZDOTDIR
   unset -f setup cleanup die
-  rm -f ".bashrc" ".bash_profile" ".zshrc" ".profile" "test_profile" > "/dev/null" 2>&1
+  rm -f ".bashrc" ".bash_profile" ".zshrc" ".profile" "test_profile" "zdots/.zshrc" > "/dev/null" 2>&1
+  rmdir "zdots" > "/dev/null" 2>&1
 }
 
 die () { echo "$@" '$NVM_DETECT_PROFILE:' "$NVM_DETECT_PROFILE"; cleanup; exit 1; }
@@ -49,6 +53,12 @@ fi
 NVM_DETECT_PROFILE="$(SHELL="/bin/zsh"; unset PROFILE; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.zshrc" ]; then
   die "nvm_detect_profile didn't pick \$HOME/.zshrc for zsh"
+fi
+
+# $ZDOTDIR should be supported for zsh
+NVM_DETECT_PROFILE="$(SHELL="usr/bin/zsh"; ZDOTDIR="$HOME/zdots"; nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "$HOME/zdots/.zshrc" ]; then
+  die "nvm_detect_profile ignored \$ZDOTDIR"
 fi
 
 # $PROFILE should override .zshrc profile detection
@@ -101,8 +111,16 @@ if [ "$NVM_DETECT_PROFILE" != "$HOME/.bash_profile" ]; then
   die "nvm_detect_profile should have selected .bash_profile"
 fi
 
-# Otherwise, it should favor .zshrc if file exists
+# Otherwise, it should favor $ZDOTDIR/.zshrc if file exists
 rm ".bash_profile"
+NVM_DETECT_PROFILE="$(unset SHELL; nvm_detect_profile)"
+if [ "$NVM_DETECT_PROFILE" != "$ZDOTDIR/.zshrc" ]; then
+	die "nvm_detect_profile should have selected zdots/.zshrc"
+fi
+
+# Otherwise, it should favor .zshrc if file exists
+rm "$ZOTDIR/.zshrc"
+unset ZDOTDIR
 NVM_DETECT_PROFILE="$(unset SHELL; nvm_detect_profile)"
 if [ "$NVM_DETECT_PROFILE" != "$HOME/.zshrc" ]; then
   die "nvm_detect_profile should have selected .zshrc"

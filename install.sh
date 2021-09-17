@@ -274,7 +274,9 @@ nvm_detect_profile() {
       DETECTED_PROFILE="$HOME/.bash_profile"
     fi
   elif [ "${SHELL#*zsh}" != "$SHELL" ]; then
-    if [ -f "$HOME/.zshrc" ]; then
+    if [ -f "$ZDOTDIR/.zshrc"]; then
+      DETECTED_PROFILE="$ZDOTDIR/.zshrc"
+    elif [ -f "$HOME/.zshrc" ]; then
       DETECTED_PROFILE="$HOME/.zshrc"
     fi
   fi
